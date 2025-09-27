@@ -15,32 +15,49 @@ import connectDB from "./utils/db.js";
 const __dirname = path.resolve();
 const app = express();
 
-// middleware
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const corsOptions = {
-  origin: "http://localhost:5173",
-  credentials: true,
-};
-app.use(cors(corsOptions));
+// CORS: allow localhost for dev and deployed frontend
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL // set this in Render environment
+];
 
-// APIs
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+// API routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
 
-//  Serve frontend (keep this BEFORE app.listen)
+// Serve frontend
 app.use(express.static(path.join(__dirname, "frontend", "dist")));
+
 app.get("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
 });
 
+// Port
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  connectDB();
-  console.log(`Server running at port ${PORT}`);
+// Connect DB first, then start server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}).catch((err) => {
+  console.error("Failed to connect to DB:", err);
 });
