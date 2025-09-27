@@ -21,19 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // CORS: allow localhost for dev and deployed frontend
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.FRONTEND_URL // set this in Render environment
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true
 }));
 
@@ -43,14 +32,14 @@ app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
 
-// Serve frontend
+// Serve frontend (React/Vite build)
 app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
 });
 
-// Port
+// Dynamic port
 const PORT = process.env.PORT || 5000;
 
 // Connect DB first, then start server
