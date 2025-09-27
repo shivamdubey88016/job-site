@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 // CORS: allow localhost for dev and deployed frontend
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: "https://job-site-1.onrender.com",
   credentials: true
 }));
 
